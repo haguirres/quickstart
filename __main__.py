@@ -3,6 +3,8 @@
 import pulumi
 from networking import virtual_network, network_security_group, subnet, nat_gateway
 from resources import resource_group
+# from pulumi_azure_native import network
+
 
 # Common variables
 location = "mexicocentral"
@@ -28,6 +30,22 @@ nat_gateway_name = "demoNATGateway"
 idle_timeout_in_minutess = 10
 public_ip_addresses = []
 zones = None
+
+
+# Route Table variables
+'''
+route_table_name = "demoRouteTable"
+routes = [
+    {
+        "name": "RoutePrivateSubnet",
+        "address_prefix": "10.0.3.0/24",
+        "next_hop_type": network.RouteNextHopType.VIRTUAL_APPLIANCE,
+        "next_hop_ip_address": ""
+
+    }
+]
+'''
+
 # Resource creation
 resource_group_instance = resource_group.create_resource_group(
     resource_group_name,
@@ -105,6 +123,28 @@ subnets = [
         "nsg": {
             "name": "PrivateNSG",
             "security_rules": [
+                {
+                    "name": "BlockingTrafficFromPublicSubnet",
+                    "priority": 100,
+                    "direction": "Inbound",
+                    "access": "Deny",
+                    "protocol": "Tcp",
+                    "source_port_range": "*",
+                    "destination_port_range": "*",
+                    "source_address_prefix": "10.0.4.0/24",
+                    "destination_address_prefix": "*"
+                },
+                {
+                    "name": "BlockingTrafficToPublicSubnet",
+                    "priority": 110,
+                    "direction": "Inbound",
+                    "access": "Deny",
+                    "protocol": "Tcp",
+                    "source_port_range": "*",
+                    "destination_port_range": "*",
+                    "source_address_prefix": "*",
+                    "destination_address_prefix": "10.0.4.0/24"
+                },
                 {
                     "name": "AllowSSH",
                     "priority": 1000,
