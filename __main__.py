@@ -1,14 +1,11 @@
 """An Azure RM Python Pulumi program"""
-
+import random
 import pulumi
 import pulumi_azure_native as azure
 from networking import virtual_network, network_security_group, subnet, nat_gateway
 from monitoring import log_analytics_workspace
 from security import key_vault
 from resources import resource_group
-
-# from pulumi_azure_native import network
-
 
 # Common variables
 location = "southcentralus"
@@ -35,23 +32,8 @@ idle_timeout_in_minutess = 10
 public_ip_addresses = []
 zones = None
 
-
-# Route Table variables
-'''
-route_table_name = "demoRouteTable"
-routes = [
-    {
-        "name": "RoutePrivateSubnet",
-        "address_prefix": "10.0.3.0/24",
-        "next_hop_type": network.RouteNextHopType.VIRTUAL_APPLIANCE,
-        "next_hop_ip_address": ""
-
-    }
-]
-'''
-
 # Keyvault variables
-key_vault_name = "demoKVpulumi"
+key_vault_name = f"demoKVpulumi-{random.randint(0, 10000)}"
 properties = {
     "tenantId": "b41b72d0-4e9f-4c26-8a69-f949f367c91d",
     "enabled_for_deployment": True,
