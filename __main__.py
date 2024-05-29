@@ -1,20 +1,24 @@
 """An Azure RM Python Pulumi program"""
 
 import pulumi
+import pulumi_azure_native as azure
 from networking import virtual_network, network_security_group, subnet, nat_gateway
+from monitoring import log_analytics_workspace
+from security import key_vault
 from resources import resource_group
+
 # from pulumi_azure_native import network
 
 
 # Common variables
-location = "mexicocentral"
+location = "southcentralus"
 tags = {
     "environment": "dev",
     "owner": "HEAS"
 }
 
 # Resource group variables
-resource_group_name = "rg-demo-pulumi-mc"
+resource_group_name = "rg-demo-pulumi-scus"
 
 # Virtual network variables
 vnet_name = "demo_virtual_network"
@@ -45,6 +49,24 @@ routes = [
     }
 ]
 '''
+
+# Keyvault variables
+key_vault_name = "demoKVpulumi"
+properties = {
+    "tenantId": "b41b72d0-4e9f-4c26-8a69-f949f367c91d",
+    "enabled_for_deployment": True,
+    "enabled_for_disk_encryption": True,
+    "enabled_for_template_deployment": True,
+    "soft_delete_retention_in_days": 30,
+    "skuFamily": azure.keyvault.SkuFamily.A,
+    "skuName": azure.keyvault.SkuName.STANDARD
+}
+
+# Azure Monitor Workspace creation
+log_analytics_workspace_name = "demoLogAnalyticsWorkspace"
+log_analytics_workspace_sku = azure.operationalinsights.WorkspaceSkuArgs(
+    name="PerGB2018")
+log_analytics_workspace_retention_in_days = 30
 
 # Resource creation
 resource_group_instance = resource_group.create_resource_group(
@@ -272,9 +294,22 @@ for subnet_config in subnets:
     )
     subnet_instances.append(subnet_instace)
 
+# Keyvault creation
+keyvault_instance = key_vault.create_key_vault(
+    key_vault_name, resource_group_instance, location, properties, tags)
+
+# Log Analytics Workspace
+log_analytics_workspace_instance = log_analytics_workspace.create_log_analytics_workspace(
+    log_analytics_workspace_name,
+    resource_group_instance, location,
+    log_analytics_workspace_sku,
+    log_analytics_workspace_retention_in_days,
+    tags)
 
 # Export IDs
 pulumi.export("RG_ID", resource_group_instance.id)
+pulumi.export("KV_ID", keyvault_instance.id)
+pulumi.export("LAW_ID", log_analytics_workspace_instance.id)
 pulumi.export("VNET_ID", virtual_network_instance.id)
 pulumi.export("NAT_GATEWAY_ID", nat_gateway_instance.id)
 pulumi.export("NSG_IDs", [nsg.id for nsg in nsg_instances])
